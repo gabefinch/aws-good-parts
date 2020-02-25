@@ -11,7 +11,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub 'Internal Security Group for ${AWS::StackName}'
+      GroupDescription: !Sub 'Security group for ${AWS::StackName}'
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
@@ -49,7 +49,7 @@ Resources:
     Type: AWS::EC2::Instance
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT5M
         Count: 1
     Metadata:
       AWS::CloudFormation::Init:
@@ -70,12 +70,12 @@ Resources:
           #!/bin/bash -xe
 
           # send script output to /tmp so we can debug boot failures
-          exec ? /tmp/userdata.log 2>&1
+          exec > /tmp/userdata.log 2>&1
 
           # Update all packages
           yum -y update
 
-          # Get latest cfn scripts; docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html#cfninit
+          # Get latest cfn scripts; https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html#cfninit
           yum install -y aws-cfn-bootstrap
 
           # Have CloudFormation install any files and packages from the metadata
@@ -111,7 +111,7 @@ Resources:
 
           # Runs the install script as the ec2-user
           chown ec2-user:ec2-user /tmp/install_script.sh && chmod a+x /tmp/install_script.sh
-          sleep 1; su - ec2-user -c "/tmpinstall_script.sh"
+          sleep 1; su - ec2-user -c "/tmp/install_script.sh"
 
           # Signal to CloudFormation that the instance is ready
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource Instance
